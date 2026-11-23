@@ -19,3 +19,7 @@ to the controller directly over USB-C (Web Serial). You can also save it and ope
 
 This repository holds only the published page; it is updated from the project's private
 repository.
+
+## License
+
+Copyright 2026 lewisfab. All rights reserved. No license is granted.
