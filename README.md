@@ -22,4 +22,6 @@ repository.
 
 ## License
 
-Copyright 2026 lewisfab. All rights reserved. No license is granted.
+Copyright (c) 2026 Lewis Fabrication LLC. All rights reserved. You may use the page and save
+a copy for your own use with your own Blynx controllers; see [LICENSE](LICENSE).
+"Blynx" and the Blynx logo are trademarks of Lewis Fabrication LLC.
