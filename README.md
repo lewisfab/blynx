@@ -6,6 +6,8 @@ lamp-out warnings, set up over USB.
 
 **Setup page: https://lewisfab.github.io/blynx/**
 
+**Demo (no controller needed, any browser): https://lewisfab.github.io/blynx/?demo**
+
 The page is one self-contained file (`index.html`): it loads nothing from the internet and talks
 to the controller directly over USB-C (Web Serial). You can also save it and open it offline.
 
