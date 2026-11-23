@@ -1140,6 +1140,52 @@ class WsTransport {               // development only: rev-c/configurator/tools/
   async close() { this.closed = true; if (this.ws) this.ws.close(); }
 }
 
+class DemoTransport {             // demo mode (?demo): a pretend controller inside the page, nothing leaves the browser
+  constructor() { this.onData = null; this.onClose = null; this.closed = true; this.timer = null; this.t = 0; }
+  async open() {
+    this.closed = false;
+    this.meta = DEMO_META.map(parseMeta);
+    this.def = {}; for (const m of this.meta) this.def[m.key] = m.def;
+    if (!DemoTransport.saved) DemoTransport.saved = Object.assign({}, this.def);   // kept while the page is open
+    this.values = Object.assign({}, DemoTransport.saved);
+  }
+  reply(lines) { setTimeout(() => { if (!this.closed && this.onData) this.onData(lines.map((l) => l + "\r\n").join("")); }, 15); }
+  status() {
+    this.t += STREAM_MS;
+    const dirty = Object.keys(this.values).some((k) => this.values[k] !== DemoTransport.saved[k]) ? 1 : 0;
+    return `S t=${this.t} pwr=ign ign=1 usb=1 vdd=5000 in=L:o512,R:o512,H:o512,LT:o512 brk=0 spd=0 pls=0 st=idle out=FL:0,FR:0,RL:0,RR:0,BRK:0 flt=- dirty=${dirty}`;
+  }
+  async write(text) {
+    if (this.closed) throw new Error("closed");
+    for (const c of text.split("\n").filter(Boolean)) {
+      const [w, ...rest] = c.trim().split(" "), arg = rest.join(" ");
+      if (w === "ID") this.reply([`ID TSC hw=C fw=demo proto=1.0 ee=3 eestate=${DemoTransport.everSaved ? "ok" : "blank"} sn=DEMO0000000000000000 rst=por`, "OK"]);
+      else if (w === "GET") this.reply(Object.entries(this.values).map(([k, v]) => k + "=" + v).concat("OK"));
+      else if (w === "META") this.reply(DEMO_META.concat("OK"));
+      else if (w === "GAMMA") this.reply([DEMO_GAMMA, "OK"]);
+      else if (w === "SET") {
+        const i = arg.indexOf("="), k = arg.slice(0, i), v = arg.slice(i + 1), m = this.meta.find((x) => x.key === k);
+        if (!m) this.reply(["ERR KEY " + k]);
+        else if (m.words ? !m.words.includes(v) : !/^\d+$/.test(v) || +v < m.min || +v > m.max) this.reply([`ERR RANGE ${k} ${m.range}`]);
+        else { this.values[k] = v; this.reply(["OK"]); }
+      }
+      else if (w === "SAVE") { DemoTransport.saved = Object.assign({}, this.values); DemoTransport.everSaved = true; this.reply(["OK SAVED"]); }
+      else if (w === "REVERT") { this.values = Object.assign({}, DemoTransport.saved); this.reply(["OK"]); }
+      else if (w === "DEFAULTS") { this.values = Object.assign({}, this.def); this.reply(["OK"]); }
+      else if (w === "STREAM") {
+        clearInterval(this.timer);
+        if (arg !== "OFF") this.timer = setInterval(() => this.reply([this.status()]), STREAM_MS);
+        this.reply(["OK"]);
+      }
+      else if (w === "FAULTS" || w === "PREVIEW") this.reply(["OK"]);
+      else this.reply(["ERR SYNTAX"]);
+    }
+  }
+  async close() { this.closed = true; clearInterval(this.timer); }
+}
+const DEMO_META = ["M switch.mode enum momentary|latching def=momentary", "M pol.left enum auto|12v|gnd def=auto", "M pol.right enum auto|12v|gnd def=auto", "M pol.haz enum auto|12v|gnd def=auto", "M pol.lights enum auto|12v|gnd def=auto", "M flash.rate int 60..120 def=90 unit=fpm", "M cancel.short int 1..20 def=5 unit=flashes", "M cancel.medium int 2..60 def=10 unit=s", "M cancel.long int 5..120 def=20 unit=s", "M run.mode enum off|both|rear|front def=both", "M run.source enum ign|lights def=lights", "M lamp.front enum bulb|led def=led", "M lamp.rear enum bulb|led def=led", "M lamp.brk enum bulb|led def=led", "M run.front gamma 0..30 def=26", "M run.rear gamma 0..30 def=26", "M fade.ms int 0..165 def=0 unit=ms step=5", "M rear.mode enum separate|combined def=combined", "M bulbout bool on|off def=on", "M party bool on|off def=off", "M wss.ppr int 0..100 def=0 unit=pulses/rev", "M wss.circ int 500..3000 def=2000 unit=mm", "M cancel.dist int 10..2000 def=150 unit=m", "M scale.on bool on|off def=off", "M scale.dmin int 10..2000 def=50 unit=m", "M scale.dmax int 10..2000 def=300 unit=m", "M scale.vlow int 0..200 def=20 unit=km/h", "M scale.vhigh int 1..250 def=100 unit=km/h", "M brake.flash bool on|off def=off", "M brake.flash_gap int 10..120 def=30 unit=s", "M brake.flash_min_speed int 0..80 def=30 unit=km/h", "M brk.fitted bool on|off def=on", "M cancel.latch_wss bool on|off def=off"];
+const DEMO_GAMMA = "GAMMA 0 0 0 0 1 1 1 2 3 4 4 5 7 8 9 11 13 14 16 18 20 23 25 28 31 33 36 40 43 46 50 54 57 61 66 70 74 79 84 89 94 99 105 110 116 122 128 134 140 147 153 160 167 174 182 189 197 205 213 221 229 238 246 255";
+
 /* ------------------------------------------------------------------ the protocol */
 
 class Board {                     // config-spec 4: one command at a time, lines by first token
@@ -1532,6 +1578,7 @@ function conflictText(c) {
 /* ------------------------------------------------------------------ connect flow (6.2, 7) */
 
 function makeTransport(fresh) {
+  if (S.demo) return Promise.resolve(new DemoTransport());
   if (S.devUrl) return Promise.resolve(new WsTransport(S.devUrl));
   return fresh ? SerialTransport.request() : SerialTransport.granted();
 }
@@ -2999,7 +3046,10 @@ function goHelpAt(id) {
   const qs = new URLSearchParams(location.search);
   const dev = qs.get("dev");
   if (dev && /^wss?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(dev)) S.devUrl = dev;
-  if (!S.devUrl && !SerialTransport.supported()) {
+  S.demo = !S.devUrl && qs.has("demo");
+  if (S.demo) {
+    banner("demo", "b-info", "Demo: a pretend controller inside this page. Try every setting; nothing is sent anywhere, and reloading the page starts over.");
+  } else if (!S.devUrl && !SerialTransport.supported()) {
     banner("browser", "b-bad", "Setup needs Chrome or Edge on a computer. This browser has no Web Serial, so it cannot talk to the controller (Firefox, Safari and every browser on an iPhone or iPad lack it). The instructions below work here.");
     S.unsupported = true;
     S.view = "help";            // nothing to set up here: open straight to the instructions
@@ -3052,7 +3102,8 @@ function goHelpAt(id) {
   window.addEventListener("beforeunload", (e) => { if (isDirty()) { e.preventDefault(); e.returnValue = ""; } });
   window.addEventListener("pagehide", () => { if (S.transport) S.transport.close(); });
   setInterval(() => { if (S.connected && S.statusAt && Date.now() - S.statusAt > 3000) $("stAge").textContent = "no status for " + Math.round((Date.now() - S.statusAt) / 1000) + " s"; }, 1000);
-  if (!S.devUrl && SerialTransport.supported()) SerialTransport.granted().then((t) => { if (t) { S.wantReconnect = true; connect(false); } });
+  if (S.demo) { S.wantReconnect = true; connect(true); }
+  else if (!S.devUrl && SerialTransport.supported()) SerialTransport.granted().then((t) => { if (t) { S.wantReconnect = true; connect(false); } });
   render();
   const hashGo = () => { const hash = location.hash.slice(1);   // a link straight to a section of the instructions (on load or in the same tab)
     if (/^h-[\w-]+$/.test(hash) && document.querySelector("#viewHelp #" + hash)) goHelpAt(hash); };
