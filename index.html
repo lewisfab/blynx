@@ -372,6 +372,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
 
 /* ---------------------------------------------------------------- layout and panels */
 .wrap { max-width: 1240px; margin: 0 auto; padding: var(--sp-6) var(--page-pad) 120px; }
+#offroadSetup { margin: var(--sp-8) auto 0; max-width: 72ch; color: var(--ink2); font-size: var(--fs-small); text-align: center; }
 #copyright { margin-top: var(--sp-12); padding-top: var(--sp-4); border-top: 1px solid var(--line); color: var(--ink2); font-size: var(--fs-small); text-align: center; }
 main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); }
 @media (min-width: 1000px) {
@@ -1059,6 +1060,7 @@ ol.steps li::before { content: counter(s); display: grid; place-items: center; w
         </div>
       </aside>
     </main>
+    <p class="offroad-line" id="offroadSetup" data-offroad>Blynx is intended for off-road use and is not certified to any road-lighting standard. Whether any setup is allowed on public roads depends on your vehicle and where you drive; check before any road use.</p>
   </section>
 
   <section id="viewHelp" class="hidden"></section>
@@ -1323,7 +1325,7 @@ const lampWord = (x) => x === "bulb" ? "incandescent" : "LED";      // short for
 const HAZ_NOTE = "Hazards with the ignition off need a ground-switched HAZ button. A +12V-switched button works only with the ignition on.";
 const FIELDS = {
   "switch.mode": { label: "Turn switch type", desc: () => "Momentary switch: springs back after each press (a self-centering lever, stalk or push buttons); each tap starts a signal that switches itself off. Latching switch: stays in position until you move it back; the signal follows it." },
-  "flash.rate": { label: "Flash rate", unit: "/min", desc: () => "How many times a minute the turn signals flash. Road rules allow 60 to 120 flashes per minute." },
+  "flash.rate": { label: "Flash rate", unit: "/min", desc: () => "How many times a minute the turn signals flash, adjustable from 60 to 120 flashes per minute." },
   "cancel.short": { label: "Quick tap: number of flashes", desc: () => "A quick tap (under 0.4 seconds) gives a lane-change signal of this many flashes, with or without a wheel sensor." },
   "cancel.medium": { label: "Normal press: switch off after", unit: "s", desc: () => wssOn()
       ? "A normal press (0.4 to 1.5 seconds) switches the signal off after the cancel distance. Until the first wheel pulse arrives it switches off after this many seconds instead."
@@ -1338,8 +1340,8 @@ const FIELDS = {
   "lamp.rear": { label: "Rear turn lamps", desc: () => "LED (LED lamps and LED replacement bulbs) or incandescent (filament bulbs): sets how bright the running light may be and how a failed lamp is noticed." },
   "brk.fitted": { label: "Brake lamp on BRK", desc: () => "A brake lamp is connected to BRK (a third brake light with combined rear lamps; all the brake lights with separate rear lamps or on a motorcycle). Turn this off if nothing is on BRK (the brake switch powers the brake lights directly), so the controller stops reporting a missing brake lamp." },
   "lamp.brk": { label: "Brake lamps on BRK", desc: () => "LED (LED lamps and LED replacement bulbs) or incandescent (filament bulbs): sets how a failed brake lamp is noticed." },
-  "run.front": { label: "Front running light brightness", desc: () => "How bright the front lamps glow as running lights; the limit keeps every flash at least five times brighter." },
-  "run.rear": { label: "Rear running light brightness", desc: () => "How bright the rear lamps glow as running lights; the limit keeps every flash at least five times brighter." },
+  "run.front": { label: "Front running light brightness", desc: () => "How bright the front lamps glow as running lights, limited so a flash stays at least 5 times brighter." },
+  "run.rear": { label: "Rear running light brightness", desc: () => "How bright the rear lamps glow as running lights, limited so a flash stays at least 5 times brighter." },
   "bulbout": { label: "Lamp-out warning", desc: () => "When a turn lamp fails, its side flashes twice as fast to tell you, like a factory flasher." },
   "wss.on": { label: "Wheel speed sensor", desc: () => "With a sensor the signal switches off after a distance driven, so it lasts longer in slow traffic and less at speed. Without one it switches off after a time." },
   "wss.circ": { label: "Tire circumference", kind: "circ", desc: () => `How far the vehicle moves in one turn of the wheel, in ${unitWords("circ")}. Measure it by rolling the wheel one turn.` },
@@ -1356,10 +1358,10 @@ const FIELDS = {
   "pol.haz": { label: "Hazard button (HAZ)", desc: () => "How the hazard button on the HAZ pad is wired. " + HAZ_NOTE },
   "pol.lights": { label: "LIGHTS input", desc: () => "How the LIGHTS pad (running lights source) is wired. Auto works with +12 V and ground." },
   "fade.ms": { label: "Flash fade-out", unit: "ms", desc: () => "Each flash dims smoothly over this many milliseconds at its end, like an incandescent lamp; 0 is a plain on/off flash." },
-  "brake.flash": { label: "Flash the third brake light first", desc: () => "On a brake press the BRK lamp flashes four times quickly, then stays on." },
+  "brake.flash": { label: "Flash the third brake light first", desc: () => "On a brake press the BRK lamp flashes four times quickly, then stays on. Off-road feature. Off by default." },
   "brake.flash_gap": { label: "Minimum time between flash bursts", unit: "s", desc: () => "After a burst, the next brake press gives a steady light until this many seconds have passed." },
   "brake.flash_min_speed": { label: "Minimum speed for a flash burst", kind: "speed", desc: () => `With a wheel sensor, bursts only happen at or above this speed (${unitWords("speed")}).` },
-  "party": { label: "Allow party mode", desc: () => "Allows light patterns on the turn lamps, started by a tap sequence (L R L R L L R R) with the ignition on and standing still." },
+  "party": { label: "Allow party mode", desc: () => "Allows light patterns on the turn lamps, started by a tap sequence (L R L R L L R R) with the ignition on and standing still. Off-road feature. Off by default." },
 };
 const GROUPS = [
   { id: "turn", title: "Turn signals", keys: ["switch.mode", "flash.rate", "cancel.short", "cancel.medium", "cancel.long"] },
@@ -1902,8 +1904,7 @@ const FMVSS_URL = "https://www.ecfr.gov/current/title-49/subtitle-B/chapter-V/pa
 const FMVSS_LINK = ["49 CFR 571.108, S7.9.5 and Table I-a", FMVSS_URL];
 function fieldNotes(key) {                 // notes under a setting, only while they apply: [text, class, [link text, url]]
   const n = [];
-  if (key === "brake.flash" && isOn("brake.flash")) n.push(["May not be road-legal: FMVSS 108 requires a steady-burning high-mounted stop lamp.", "", FMVSS_LINK]);
-  if (key === "party" && isOn("party")) n.push(["Off-road use only. Not legal on public roads.", ""]);
+  if (key === "brake.flash" && isOn("brake.flash")) n.push(["US lighting rules (FMVSS 108) require a steady third brake light on road vehicles.", "", FMVSS_LINK]);
   if (key === "cancel.latch_wss" && disabledReason(key)) n.push(["Only with a latching turn switch (Turn signals) and a wheel speed sensor.", "info"]);
   else if (key === "cancel.latch_wss" && isOn(key)) n.push(["After a stop, move the switch back to the center before signaling that way again.", "info"]);
   if (key === "pol.haz") n.push([HAZ_NOTE, v("pol.haz") === "12v" ? "" : "info"]);       // config-spec: the page must say this
@@ -3015,13 +3016,14 @@ ${padMap("moto", "The motorcycle example, pad by pad: each wire's number on the 
 <tr><td>Running lights flicker</td><td>Some LED lamps with built-in electronics don't dim: lower the brightness or turn running lights off.</td></tr></table></div></section>
 
 <section id="h-legal"><h2>Safety and the law</h2>
+<p class="offroad" data-offroad>Blynx is intended for off-road use and is not certified to any road-lighting standard. Whether any setup is allowed on public roads depends on your vehicle and where you drive; check before any road use.</p>
 <div class="legal"><ul>
-<li>In the US the lamps must meet FMVSS 108: a flash rate of 60-120 per minute (the controller holds this), and running lights dim enough that a flash stays clearly brighter (the brightness limits do this).</li>
-<li><b>Flashing third brake light</b>: may not be road-legal: FMVSS 108 requires a steady-burning high-mounted stop lamp (<a href="${FMVSS_URL}" target="_blank" rel="noopener">${FMVSS_LINK[0]}</a>).</li>
-<li><b>Party mode</b>: off-road use only. Not legal on public roads.</li>
+<li>Flash rate adjustable from 60 to 120 per minute. The running-light glow is limited so a flash stays at least 5 times brighter.</li>
+<li><b>Flashing third brake light</b>: Off-road feature. Off by default. US lighting rules (FMVSS 108) require a steady third brake light on road vehicles (<a href="${FMVSS_URL}" target="_blank" rel="noopener">${FMVSS_LINK[0]}</a>).</li>
+<li><b>Party mode</b>: Off-road feature. Off by default.</li>
 <li>If the controller fails, only the lamps on BRK still light with the brake (backup circuit). With combined rear lamps, fit one: otherwise there is no brake light at all. With separate rear lamps or on a motorcycle, brake lights not on BRK are powered directly by the brake switch, so they do not depend on the controller.</li>
 <li class="fuse-legal">Fuse the +12 V feed near the battery: ${FUSE_RULE} Keep the board dry and away from hot parts.</li></ul></div>
-<div class="legal disclaimer" id="h-disclaimer"><p><b>Intended for off-road use.</b> Check local rules before any use on public roads.</p>
+<div class="legal disclaimer" id="h-disclaimer"><p data-offroad><b>Blynx is intended for off-road use and is not certified to any road-lighting standard.</b> Whether any setup is allowed on public roads depends on your vehicle and where you drive; check before any road use.</p>
 <p><b>No warranty.</b> This controller and this page are provided as is, without warranty of any kind. You are responsible for installing it correctly, for fusing and wiring it as described here, and for making sure your lighting meets the laws where you drive. The maker accepts no liability for damage, injury or loss from its use, misuse, installation or failure, including a failure of any lamp or of the controller.</p></div></section>
 </article></div>`;
 /* the contents list marks the section being read: a clicked entry at once (until the reader scrolls on); scrolled to the
