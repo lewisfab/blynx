@@ -372,7 +372,8 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
 
 /* ---------------------------------------------------------------- layout and panels */
 .wrap { max-width: 1240px; margin: 0 auto; padding: var(--sp-6) var(--page-pad) 120px; }
-#offroadSetup { margin: var(--sp-8) auto 0; max-width: 72ch; color: var(--ink2); font-size: var(--fs-small); text-align: center; }
+#offroadSetup { margin: var(--sp-8) auto 0; max-width: 76ch; font-size: var(--fs-body); padding: 10px 14px; }   /* the off-road notice: an amber box, body size */
+#offroadSetup[hidden] { display: none; }
 #copyright { margin-top: var(--sp-12); padding-top: var(--sp-4); border-top: 1px solid var(--line); color: var(--ink2); font-size: var(--fs-small); text-align: center; }
 main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); }
 @media (min-width: 1000px) {
@@ -1060,7 +1061,7 @@ ol.steps li::before { content: counter(s); display: grid; place-items: center; w
         </div>
       </aside>
     </main>
-    <p class="offroad-line" id="offroadSetup" data-offroad>Blynx is intended for off-road use and is not certified to any road-lighting standard. Whether any setup is allowed on public roads depends on your vehicle and where you drive; check before any road use.</p>
+    <div class="note" id="offroadSetup" data-offroad role="note"><span><b>Blynx is intended for off-road use and is not certified to any road-lighting standard.</b> Whether any setup is allowed on public roads depends on your vehicle and where you drive; check before any road use.</span></div>
   </section>
 
   <section id="viewHelp" class="hidden"></section>
@@ -3088,6 +3089,7 @@ function goHelpAt(id) {
   watchCallouts($("ctaFig")); watchCallouts($("viewHelp"));
   for (const e of document.querySelectorAll("[data-art]")) e.innerHTML = art(e.dataset.art, { label: false });
   for (const b of document.querySelectorAll("#bar [data-icon]")) b.insertAdjacentHTML("afterbegin", icon(b.dataset.icon));
+  $("offroadSetup").insertAdjacentHTML("afterbegin", icon("warn"));
   $("btnConnectBig").insertAdjacentHTML("afterbegin", icon("plug"));
   setTheme(null); setUnits(null);
   for (const b of document.querySelectorAll("[data-theme-set]")) b.onclick = () => setTheme(b.dataset.themeSet);
