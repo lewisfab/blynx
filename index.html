@@ -3067,10 +3067,15 @@ function goHelpAt(id) {
   const dev = qs.get("dev");
   if (dev && /^wss?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(dev)) S.devUrl = dev;
   S.demo = !S.devUrl && qs.has("demo");
+  // a link straight to the instructions (#instructions, or #h-<section>): open them for reading, with no USB connection
+  // attempt and no browser message until the reader goes to Setup (people reading before they have a board)
+  const guide = !S.demo && !S.devUrl && /^(instructions|h-[\w-]+)$/.test(location.hash.slice(1));
+  if (guide) S.view = "help";
   if (S.demo) {
     banner("demo", "b-info", "Demo: a pretend controller inside this page. Try every setting; nothing is sent anywhere, and reloading the page starts over.");
   } else if (!S.devUrl && !SerialTransport.supported()) {
-    banner("browser", "b-bad", "Setup needs Chrome or Edge on a computer. This browser has no Web Serial, so it cannot talk to the controller (Firefox, Safari and every browser on an iPhone or iPad lack it). The instructions below work here.");
+    const msg = () => banner("browser", "b-bad", "Setup needs Chrome or Edge on a computer. This browser has no Web Serial, so it cannot talk to the controller (Firefox, Safari and every browser on an iPhone or iPad lack it). The instructions below work here.");
+    if (guide) S.laterBanner = msg; else msg();
     S.unsupported = true;
     S.view = "help";            // nothing to set up here: open straight to the instructions
   } else if (!S.devUrl && !window.isSecureContext) {
@@ -3099,7 +3104,7 @@ function goHelpAt(id) {
   gear.onclick = () => prefsOpen(!prefs.classList.contains("open"));
   document.addEventListener("click", (e) => { if (!prefs.contains(e.target)) prefsOpen(false); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && prefs.classList.contains("open")) { prefsOpen(false); gear.focus(); } });
-  $("tabSettings").onclick = () => { S.view = "settings"; render(); };
+  $("tabSettings").onclick = () => { if (S.laterBanner) { S.laterBanner(); S.laterBanner = null; } S.view = "settings"; render(); };
   $("tabHelp").onclick = () => { S.view = "help"; render(); window.scrollTo(0, 0); };
   $("goHelp").onclick = () => { S.view = "help"; render(); window.scrollTo(0, 0); };
   const barH = () => document.documentElement.style.setProperty("--bar-h", $("bar").offsetHeight + "px");
@@ -3124,10 +3129,11 @@ function goHelpAt(id) {
   window.addEventListener("pagehide", () => { if (S.transport) S.transport.close(); });
   setInterval(() => { if (S.connected && S.statusAt && Date.now() - S.statusAt > 3000) $("stAge").textContent = "no status for " + Math.round((Date.now() - S.statusAt) / 1000) + " s"; }, 1000);
   if (S.demo) { S.wantReconnect = true; connect(true); }
-  else if (!S.devUrl && SerialTransport.supported()) SerialTransport.granted().then((t) => { if (t) { S.wantReconnect = true; connect(false); } });
+  else if (!S.devUrl && !guide && SerialTransport.supported()) SerialTransport.granted().then((t) => { if (t) { S.wantReconnect = true; connect(false); } });
   render();
   const hashGo = () => { const hash = location.hash.slice(1);   // a link straight to a section of the instructions (on load or in the same tab)
-    if (/^h-[\w-]+$/.test(hash) && document.querySelector("#viewHelp #" + hash)) goHelpAt(hash); };
+    if (/^h-[\w-]+$/.test(hash) && document.querySelector("#viewHelp #" + hash)) goHelpAt(hash);
+    else if (hash === "instructions") { S.view = "help"; render(); window.scrollTo(0, 0); tocUpdate(); } };
   hashGo(); window.addEventListener("hashchange", hashGo);
   window.__tsc = { S, commit, setRaw: (k, x) => commit(k, String(x), { nocheck: true }), startWizard, hazAnswer, brkAnswer };
 })();
