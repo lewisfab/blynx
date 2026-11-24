@@ -2297,10 +2297,12 @@ function reviewItems() {
 function renderWizard() {
   const box = $("wizard");
   document.body.classList.toggle("wiz-open", !!S.wiz && S.view === "settings");
+  $("offroadSetup").hidden = false;   // the off-road line: start screen, all settings and quick setup step 1 only
   if (!S.wiz) { box.classList.add("hidden"); return; }
   box.classList.remove("hidden");
   const steps = wizSteps();
   if (S.wiz.step >= steps.length) S.wiz.step = steps.length - 1;
+  $("offroadSetup").hidden = S.wiz.step > 0;
   const step = steps[S.wiz.step], m = moto();
   box.innerHTML = "";
   const top = document.createElement("div"); top.className = "wtop";
