@@ -325,8 +325,8 @@ button.link:disabled { color: var(--ink2); text-decoration: none; opacity: 1; }
 header { position: sticky; top: 0; z-index: 7; background: var(--sf); border-bottom: var(--bw-rule) solid var(--ink);
   display: flex; align-items: center; gap: 10px 18px; padding: 0 var(--sp-6); min-height: 64px; }
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
-#brandMark { display: flex; flex: none; }
-#brandMark svg { width: 28px; height: 28px; overflow: visible; }   /* the dark badge's ring is centred on its edge */
+#brandMark { display: flex; flex: none; align-self: flex-start; }
+#brandMark svg { width: 31px; height: 31px; overflow: visible; }   /* from the wordmark's top to the tagline's baseline (the foot of its T); the dark badge's ring is centred on its edge */
 header h1 { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin: 0; white-space: nowrap; }
 header h1 svg { display: block; height: 18px; width: auto; overflow: visible; }   /* the Blynx wordmark (design/svg/brand/wordmark.svg) */
 header h1 small { display: block; font-weight: var(--fw-regular); color: var(--ink2); font-size: 12px; line-height: 1; }
@@ -931,6 +931,7 @@ ol.steps li::before { content: counter(s); display: grid; place-items: center; w
   .brand { grid-area: brand; } #prefs { grid-area: prefs; justify-self: end; } nav.tabs { grid-area: tabs; min-height: 42px; }
   #conn { grid-area: conn; } #btnConnect, #btnDisconnect { grid-area: btn; align-self: center; margin-bottom: 4px; }
   .hsp { display: none; }
+  #brandMark { align-self: center; } #brandMark svg { width: 28px; height: 28px; }   /* no tagline at phone width */
   header h1 small { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }   /* still read out */
   nav.tabs button { padding: 0 8px; }
   #conn #connText, #conn #connFw { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
