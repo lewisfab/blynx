@@ -1201,7 +1201,7 @@ class DemoTransport {             // demo mode (?demo): a pretend controller ins
   }
   async close() { this.closed = true; clearInterval(this.timer); }
 }
-const DEMO_META = ["M switch.mode enum momentary|latching def=momentary", "M pol.left enum auto|12v|gnd def=auto", "M pol.right enum auto|12v|gnd def=auto", "M pol.haz enum auto|12v|gnd def=auto", "M pol.lights enum auto|12v|gnd def=auto", "M flash.rate int 60..120 def=90 unit=fpm", "M cancel.short int 1..20 def=5 unit=flashes", "M cancel.medium int 2..60 def=10 unit=s", "M cancel.long int 5..120 def=20 unit=s", "M run.mode enum off|both|rear|front def=both", "M run.source enum ign|lights def=lights", "M lamp.front enum bulb|led def=led", "M lamp.rear enum bulb|led def=led", "M lamp.brk enum bulb|led def=led", "M run.front gamma 0..30 def=26", "M run.rear gamma 0..30 def=26", "M fade.ms int 0..165 def=0 unit=ms step=5", "M rear.mode enum separate|combined def=combined", "M bulbout bool on|off def=on", "M party bool on|off def=off", "M wss.ppr int 0..100 def=0 unit=pulses/rev", "M wss.circ int 500..3000 def=2000 unit=mm", "M cancel.dist int 10..2000 def=150 unit=m", "M scale.on bool on|off def=off", "M scale.dmin int 10..2000 def=50 unit=m", "M scale.dmax int 10..2000 def=300 unit=m", "M scale.vlow int 0..200 def=20 unit=km/h", "M scale.vhigh int 1..250 def=100 unit=km/h", "M brake.flash bool on|off def=off", "M brake.flash_gap int 10..120 def=30 unit=s", "M brake.flash_min_speed int 0..80 def=30 unit=km/h", "M brk.fitted bool on|off def=on", "M cancel.latch_wss bool on|off def=off"];
+const DEMO_META = ["M switch.mode enum momentary|latching def=momentary", "M pol.left enum auto|12v|gnd def=auto", "M pol.right enum auto|12v|gnd def=auto", "M pol.haz enum auto|12v|gnd def=auto", "M pol.lights enum auto|12v|gnd def=auto", "M flash.rate int 60..120 def=90 unit=fpm", "M cancel.short int 1..20 def=5 unit=flashes", "M cancel.medium int 2..60 def=10 unit=s", "M cancel.long int 5..120 def=20 unit=s", "M run.mode enum off|both|rear|front def=both", "M run.source enum ign|lights def=lights", "M lamp.front enum bulb|led def=led", "M lamp.rear enum bulb|led def=led", "M lamp.brk enum bulb|led def=led", "M run.front gamma 0..30 def=26", "M run.rear gamma 0..30 def=26", "M fade.ms int 0..165 def=0 unit=ms step=5", "M rear.mode enum separate|combined def=combined", "M bulbout bool on|off def=on", "M party bool on|off def=off", "M wss.ppr int 0..100 def=0 unit=pulses/rev", "M wss.circ int 500..3000 def=2000 unit=mm", "M cancel.dist int 10..2000 def=150 unit=m", "M scale.on bool on|off def=off", "M scale.dmin int 10..2000 def=50 unit=m", "M scale.dmax int 10..2000 def=300 unit=m", "M scale.vlow int 0..200 def=20 unit=km/h", "M scale.vhigh int 1..250 def=100 unit=km/h", "M brake.flash bool on|off def=off", "M brake.flash_gap int 10..120 def=30 unit=s", "M brake.flash_min_speed int 0..80 def=30 unit=km/h", "M brk.fitted bool on|off def=on", "M cancel.latch_wss bool on|off def=off", "M fade.in_ms int 0..80 def=0 unit=ms step=5"];
 const DEMO_GAMMA = "GAMMA 0 0 0 0 1 1 1 2 3 4 4 5 7 8 9 11 13 14 16 18 20 23 25 28 31 33 36 40 43 46 50 54 57 61 66 70 74 79 84 89 94 99 105 110 116 122 128 134 140 147 153 160 167 174 182 189 197 205 213 221 229 238 246 255";
 
 /* ------------------------------------------------------------------ the protocol */
@@ -1358,6 +1358,7 @@ const FIELDS = {
   "pol.right": { label: "Right turn switch (R)", desc: () => "How the right turn switch on the R pad is wired. Auto works with switches to +12 V and to ground." },
   "pol.haz": { label: "Hazard button (HAZ)", desc: () => "How the hazard button on the HAZ pad is wired. " + HAZ_NOTE },
   "pol.lights": { label: "LIGHTS input", desc: () => "How the LIGHTS pad (running lights source) is wired. Auto works with +12 V and ground." },
+  "fade.in_ms": { label: "Flash fade-in", unit: "ms", desc: () => "Each flash brightens smoothly over this many milliseconds at its start, like an incandescent lamp warming up; 0 switches on at once. Fade-in and fade-out together use at most half of each flash." },
   "fade.ms": { label: "Flash fade-out", unit: "ms", desc: () => "Each flash dims smoothly over this many milliseconds at its end, like an incandescent lamp; 0 is a plain on/off flash." },
   "brake.flash": { label: "Flash the third brake light first", desc: () => "On a brake press the BRK lamp flashes four times quickly, then stays on. Off-road feature. Off by default." },
   "brake.flash_gap": { label: "Minimum time between flash bursts", unit: "s", desc: () => "After a burst, the next brake press gives a steady light until this many seconds have passed." },
@@ -1369,7 +1370,7 @@ const GROUPS = [
   { id: "rear", title: "Rear lamps and running lights", keys: ["rear.mode", "run.mode", "run.source"] },
   { id: "lamps", title: "Lamps and lamp-out warning", keys: ["lamp.front", "lamp.rear", "run.front", "run.rear", "brk.fitted", "lamp.brk", "bulbout"] },
   { id: "wss", title: "Wheel speed sensor", keys: ["wss.on", "wss.circ", "wss.ppr", "cancel.dist", "cancel.latch_wss", "scale.on", "scale.dmin", "scale.dmax", "scale.vlow", "scale.vhigh"] },
-  { id: "adv", title: "Advanced", advanced: true, keys: ["fade.ms", "brake.flash", "brake.flash_gap", "brake.flash_min_speed", "party",
+  { id: "adv", title: "Advanced", advanced: true, keys: ["fade.in_ms", "fade.ms", "brake.flash", "brake.flash_gap", "brake.flash_min_speed", "party",
     "pol.left", "pol.right", "pol.haz", "pol.lights"] },
 ];
 const PREVIEW = { "run.front": "front", "run.rear": "rear" };
@@ -2042,7 +2043,7 @@ async function commit(key, val, opts = {}) {
     for (const [k, x] of Object.entries(cl)) S.values[k] = x;
     note = "Also changed to stay within the limits: " + Object.entries(cl).map(([k, x]) => `${(FIELDS[k] || {}).label || k} ${showValue(k, x)}`).join(", ") + ".";
   }
-  if (r.final.startsWith("OK CLAMP") || /^(lamp\.|flash\.rate)/.test(key)) await loadMeta();
+  if (r.final.startsWith("OK CLAMP") || /^(lamp\.|flash\.rate|fade\.)/.test(key)) await loadMeta();   // fade-in and fade-out share one cap
   syncEdits();
   if (key === "wss.ppr") rememberPpr();
   refreshFields(); if (S.wiz) renderWizard();
