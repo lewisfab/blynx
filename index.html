@@ -375,6 +375,12 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
 #offroadSetup { margin: var(--sp-8) auto 0; max-width: 76ch; font-size: var(--fs-body); padding: 10px 14px; }   /* the off-road notice: an amber box, body size */
 #offroadSetup[hidden] { display: none; }
 #copyright { margin-top: var(--sp-12); padding-top: var(--sp-4); border-top: 1px solid var(--line); color: var(--ink2); font-size: var(--fs-small); text-align: center; }
+#copyright .flinks { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 6px 20px; margin: 0 0 8px; }
+#copyright a { color: var(--ink2); text-decoration: underline; text-underline-offset: 2px; padding: 4px 0; }
+#copyright a:hover { color: var(--ink); }
+#copyright a.src { font-size: 12px; }
+#copyright a[hidden] { display: none; }
+#copyright .ver { margin: 0 0 4px; font-variant-numeric: tabular-nums; }
 main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-6); }
 @media (min-width: 1000px) {
   main { grid-template-columns: minmax(0, 1.65fr) minmax(320px, 1fr); align-items: start; }
@@ -1061,11 +1067,19 @@ ol.steps li::before { content: counter(s); display: grid; place-items: center; w
         </div>
       </aside>
     </main>
-    <div class="note" id="offroadSetup" data-offroad role="note"><span><b>Blynx is intended for off-road use and is not certified to any road-lighting standard.</b> Whether any setup is allowed on public roads depends on your vehicle and where you drive; check before any road use.</span></div>
+    <div class="note" id="offroadSetup" data-offroad role="note"><span><b>Blynx is intended for off-road use only.</b> It is not certified to any road-lighting standard and is not intended for use on public roads.</span></div>
   </section>
 
   <section id="viewHelp" class="hidden"></section>
-  <footer id="copyright">Copyright &copy; 2026 Lewis Fabrication LLC. All rights reserved.</footer>
+  <footer id="copyright">
+    <nav class="flinks" aria-label="Page links">
+      <a id="lnkLatest" href="https://lewisfab.github.io/blynx/" target="_blank" rel="noopener">Latest version</a>
+      <a id="lnkReport" data-report href="https://github.com/lewisfab/blynx/issues/new" target="_blank" rel="noopener">Report a problem</a>
+      <a id="lnkSource" class="src" href="https://github.com/lewisfab/blynx" target="_blank" rel="noopener">Source</a>
+    </nav>
+    <div class="ver" id="pageVer"></div>
+    <div>Copyright &copy; 2026 Lewis Fabrication LLC. All rights reserved.</div>
+  </footer>
 </div>
 
 <div id="bar">
@@ -1092,6 +1106,11 @@ ol.steps li::before { content: counter(s); display: grid; place-items: center; w
  * development only and is used only when the page is opened with ?dev=ws://localhost:PORT/... */
 
 const SUPPORTED_MAJORS = [1];
+/* The page's version, shown in the footer. "dev" in the repository; tools/publish.ps1 writes
+ * "<yyyy-mm-dd> <short commit hash>" into the copy it publishes (never into this file). */
+const PAGE_VERSION = "2026-11-27 f900af5";
+const LATEST_URL = "https://lewisfab.github.io/blynx/", SOURCE_URL = "https://github.com/lewisfab/blynx";
+const ISSUE_URL = SOURCE_URL + "/issues/new";
 const CH340 = { usbVendorId: 0x1A86, usbProductId: 0x7523 };
 const STREAM_MS = 500;
 
@@ -2386,7 +2405,7 @@ function renderWizard() {
       c.classList.add("small"); row.appendChild(c); body.appendChild(row);
     }
   } else if (step === "run") {
-    if (m) h("Marker glow", "Should the indicators glow dimly as marker lights whenever the ignition is on? Off unless your local rules call for it.");
+    if (m) h("Marker glow", "Should the indicators glow dimly as marker lights whenever the ignition is on? Off by default.");
     else h("Running lights", "Should the turn lamps glow dimly when they are not flashing (running or parking lights)? The brightness is the usual one for the lamp type.");
     const cur = v("run.mode") === "off" ? "off" : v("run.source");
     // still pictures (no flashing), so on and off are told apart by the glow alone; a caption under each
@@ -2631,7 +2650,7 @@ function render() {
   $("cta").classList.toggle("hidden", haveData);
   $("mainGrid").classList.toggle("hidden", !haveData || !!S.wiz);
   $("btnWizard").disabled = !S.connected || S.readOnly;
-  renderWizard(); renderSettings(); renderStatus(); renderBoard(); renderFaults(); renderBanners(); renderBar();
+  renderWizard(); renderSettings(); renderStatus(); renderBoard(); renderFaults(); renderBanners(); renderBar(); refreshReportLinks();
 }
 
 /* ------------------------------------------------------------------ theme and units */
@@ -3017,17 +3036,18 @@ ${padMap("moto", "The motorcycle example, pad by pad: each wire's number on the 
 <tr><td>A switch does nothing</td><td>Live status shows each input: "open" means no signal. Check the wire and the switch wiring setting.</td></tr>
 <tr><td>Hazards don't work with the ignition off</td><td>The hazard button must switch to ground.</td></tr>
 <tr><td>Signals never cancel with a wheel sensor</td><td>Live status should count pulses while the wheel turns; check the sensor gap and its wires on WSS and GND.</td></tr>
-<tr><td>Running lights flicker</td><td>Some LED lamps with built-in electronics don't dim: lower the brightness or turn running lights off.</td></tr></table></div></section>
+<tr><td>Running lights flicker</td><td>Some LED lamps with built-in electronics don't dim: lower the brightness or turn running lights off.</td></tr></table></div>
+<p class="stuck" id="h-stuck">Still stuck? <a data-report href="${ISSUE_URL}" target="_blank" rel="noopener">Report a problem</a> (opens GitHub; you'll need a free account).</p></section>
 
 <section id="h-legal"><h2>Safety and the law</h2>
-<p class="offroad" data-offroad>Blynx is intended for off-road use and is not certified to any road-lighting standard. Whether any setup is allowed on public roads depends on your vehicle and where you drive; check before any road use.</p>
+<p class="offroad" data-offroad><b>Blynx is intended for off-road use only.</b> It is not certified to any road-lighting standard and is not intended for use on public roads.</p>
 <div class="legal"><ul>
 <li>Flash rate adjustable from 60 to 120 per minute. The running-light glow is limited so a flash stays at least 5 times brighter.</li>
 <li><b>Flashing third brake light</b>: Off-road feature. Off by default. US lighting rules (FMVSS 108) require a steady third brake light on road vehicles (<a href="${FMVSS_URL}" target="_blank" rel="noopener">${FMVSS_LINK[0]}</a>).</li>
 <li><b>Party mode</b>: Off-road feature. Off by default.</li>
 <li>If the controller fails, only the lamps on BRK still light with the brake (backup circuit). With combined rear lamps, fit one: otherwise there is no brake light at all. With separate rear lamps or on a motorcycle, brake lights not on BRK are powered directly by the brake switch, so they do not depend on the controller.</li>
 <li class="fuse-legal">Fuse the +12 V feed near the battery: ${FUSE_RULE} Keep the board dry and away from hot parts.</li></ul></div>
-<div class="legal disclaimer" id="h-disclaimer"><p data-offroad><b>Blynx is intended for off-road use and is not certified to any road-lighting standard.</b> Whether any setup is allowed on public roads depends on your vehicle and where you drive; check before any road use.</p>
+<div class="legal disclaimer" id="h-disclaimer"><p data-offroad><b>Blynx is intended for off-road use only.</b> It is not certified to any road-lighting standard and is not intended for use on public roads.</p>
 <p><b>No warranty.</b> This controller and this page are provided as is, without warranty of any kind. You are responsible for installing it correctly, for fusing and wiring it as described here, and for making sure your lighting meets the laws where you drive. The maker accepts no liability for damage, injury or loss from its use, misuse, installation or failure, including a failure of any lamp or of the controller.</p></div></section>
 </article></div>`;
 /* the contents list marks the section being read: a clicked entry at once (until the reader scrolls on); scrolled to the
@@ -3060,6 +3080,71 @@ function goHelpAt(id) {
   tocUpdate();
 }
 
+/* ------------------------------------------------------------------ problem reports */
+/* "Report a problem" opens a new GitHub issue with the title and body filled in (URL parameters).
+ * The body holds only what helps find a fault: the page version, the board's firmware, protocol
+ * and hardware revision and its current fault list (when connected), the vehicle type, and the
+ * browser and OS. Never settings values or the serial number. The user sees and edits it all on
+ * GitHub before submitting. The whole URL stays under 2000 characters. */
+const ISSUE_MAX = 2000;
+function shortAgent(ua) {
+  ua = ua || navigator.userAgent || "";
+  const ver = (re) => { const m = ua.match(re); return m ? m[1] : ""; };
+  let b = "unknown browser";
+  if (/Edg(e|A|iOS)?\//.test(ua)) b = "Edge " + ver(/Edg(?:e|A|iOS)?\/(\d+)/);
+  else if (/OPR\//.test(ua)) b = "Opera " + ver(/OPR\/(\d+)/);
+  else if (/Firefox\/|FxiOS\//.test(ua)) b = "Firefox " + ver(/(?:Firefox|FxiOS)\/(\d+)/);
+  else if (/Chrome\/|CriOS\//.test(ua)) b = "Chrome " + ver(/(?:Chrome|CriOS)\/(\d+)/);
+  else if (/Safari\//.test(ua)) b = "Safari " + ver(/Version\/(\d+)/);
+  let o = "unknown OS";
+  if (/iPhone|iPad|iPod/.test(ua)) o = "iOS " + ver(/OS (\d+)[_\d]* like Mac/);
+  else if (/Android/.test(ua)) o = "Android " + ver(/Android (\d+)/);
+  else if (/CrOS/.test(ua)) o = "ChromeOS";
+  else if (/Windows NT 10/.test(ua)) o = "Windows 10/11";
+  else if (/Windows/.test(ua)) o = "Windows (older)";
+  else if (/Mac OS X/.test(ua)) o = "macOS";
+  else if (/Linux/.test(ua)) o = "Linux";
+  return (b + ", " + o).replace(/ ,/g, ",").trim();
+}
+function issueDetails() {
+  const on = S.connected && S.id;
+  const lines = ["Setup page: " + PAGE_VERSION];
+  if (on) {
+    lines.push("Firmware: " + (S.id.fw || "?") + ", protocol " + (S.id.proto || "?") + ", hardware Rev " + (S.id.hw || "?"));
+    const f = S.status ? S.status.faults : [];
+    lines.push("Faults now: " + (f.length ? f.join(", ") : "none"));
+  } else lines.push("Controller: not connected");
+  if (S.demo) lines.push("Mode: demo");
+  lines.push("Vehicle: " + (S.vehicle && VEHICLES[S.vehicle] ? (S.vehicle === "moto" ? "motorcycle" : "car") : "not chosen"));
+  lines.push("Browser: " + shortAgent());
+  return lines;
+}
+function issueUrl() {
+  const head = "What happened:\n\n\nWhat you expected:\n\n\nSteps:\n1. \n\n";
+  const det = issueDetails();
+  const build = (rows) => ISSUE_URL + "?title=" + encodeURIComponent("Problem: ") + "&body=" +
+    encodeURIComponent(head + "Details\n```\n" + rows.join("\n") + "\n```\n");
+  let url = build(det);
+  // too long (a very long fault list): shorten the fault line until it fits
+  for (let i = det.findIndex((l) => l.startsWith("Faults now: ")); url.length >= ISSUE_MAX && i >= 0; ) {
+    const parts = det[i].slice(12).split(", ");
+    if (parts.length <= 1) { det[i] = "Faults now: (too many to list)"; url = build(det); break; }
+    parts.splice(-2, 2, "...");
+    det[i] = "Faults now: " + parts.join(", "); url = build(det);
+  }
+  return url;
+}
+function refreshReportLinks() { const u = issueUrl(); document.querySelectorAll("a[data-report]").forEach((a) => { a.href = u; }); }
+const onLatestSite = (loc = location) => loc.hostname === "lewisfab.github.io" && /^\/blynx(\/|$)/.test(loc.pathname);
+function setupFooter() {
+  $("pageVer").textContent = "Setup page " + PAGE_VERSION;
+  $("lnkLatest").hidden = onLatestSite();
+  refreshReportLinks();
+  // fill the link in at the moment it is used, so it carries the state of that moment
+  document.addEventListener("click", (e) => { const a = e.target.closest && e.target.closest("a[data-report]"); if (a) a.href = issueUrl(); }, true);
+  document.addEventListener("auxclick", (e) => { const a = e.target.closest && e.target.closest("a[data-report]"); if (a) a.href = issueUrl(); }, true);
+}
+
 /* ------------------------------------------------------------------ start */
 
 (function start() {
@@ -3088,7 +3173,7 @@ function goHelpAt(id) {
     ol.outerHTML = `<div class="note info devnote" id="ctaDev">${icon("info")}<span>Development mode: Connect talks to the firmware simulator ` +
       `(tools/sim_bridge.py). Start it first: <code>py -3.13 rev-c/<wbr>configurator/<wbr>tools/<wbr>sim_bridge.py</code></span></div>`;
   }
-  $("viewHelp").innerHTML = HELP_HTML(); tocSpy();
+  $("viewHelp").innerHTML = HELP_HTML(); tocSpy(); setupFooter();
   $("brandMark").innerHTML = art("mark", { label: false });
   $("btnPrefs").innerHTML = icon("gear");
   $("ctaFig").innerHTML = startFigure();
