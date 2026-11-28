@@ -852,6 +852,9 @@ body.wiz-open #bar { display: none; }
 #viewHelp nav.toc a span { color: var(--ink2); font-variant-numeric: tabular-nums; }
 #viewHelp .alias { display: block; height: 0; scroll-margin-top: 80px; }
 .legal.disclaimer { margin-top: var(--sp-4); padding: 4px 16px; }
+#viewHelp .usebox { border: var(--bw-control) solid var(--line); border-radius: var(--r-1); padding: 4px 16px; margin-top: var(--sp-4); }
+#viewHelp .legal > h3, #viewHelp .usebox > h3 { margin: 14px 0 4px; }
+#viewHelp .legal.safety h3 { color: var(--warn-ink); }
 #viewHelp nav.toc a.cur { background: var(--sf); border-left-color: var(--acc); font-weight: var(--fw-semi); }
 #viewHelp article { min-width: 0; max-width: 820px; }
 #viewHelp h1 { font-size: var(--fs-display); margin: 0 0 8px; }
@@ -1108,7 +1111,7 @@ ol.steps li::before { content: counter(s); display: grid; place-items: center; w
 const SUPPORTED_MAJORS = [1];
 /* The page's version, shown in the footer. "dev" in the repository; tools/publish.ps1 writes
  * "<yyyy-mm-dd> <short commit hash>" into the copy it publishes (never into this file). */
-const PAGE_VERSION = "2026-11-27 f900af5";
+const PAGE_VERSION = "2026-11-27 ae43ab2";
 const LATEST_URL = "https://lewisfab.github.io/blynx/", SOURCE_URL = "https://github.com/lewisfab/blynx";
 const ISSUE_URL = SOURCE_URL + "/issues/new";
 const CH340 = { usbVendorId: 0x1A86, usbProductId: 0x7523 };
@@ -1346,13 +1349,13 @@ const HAZ_NOTE = "Hazards with the ignition off need a ground-switched HAZ butto
 const FIELDS = {
   "switch.mode": { label: "Turn switch type", desc: () => "Momentary switch: springs back after each press (a self-centering lever, stalk or push buttons); each tap starts a signal that switches itself off. Latching switch: stays in position until you move it back; the signal follows it." },
   "flash.rate": { label: "Flash rate", unit: "/min", desc: () => "How many times a minute the turn signals flash, adjustable from 60 to 120 flashes per minute." },
-  "cancel.short": { label: "Quick tap: number of flashes", desc: () => "A quick tap (under 0.4 seconds) gives a lane-change signal of this many flashes, with or without a wheel sensor." },
+  "cancel.short": { label: "Quick tap: number of flashes", desc: () => "A quick tap (under 0.4 seconds) gives a short signal of this many flashes, with or without a wheel sensor." },
   "cancel.medium": { label: "Normal press: switch off after", unit: "s", desc: () => wssOn()
       ? "A normal press (0.4 to 1.5 seconds) switches the signal off after the cancel distance. Until the first wheel pulse arrives it switches off after this many seconds instead."
       : "A normal press (0.4 to 1.5 seconds) switches the signal off after this many seconds." },
   "cancel.long": { label: "Long press: switch off after", unit: "s", desc: () => wssOn()
       ? "A long press (over 1.5 seconds) switches off after twice the cancel distance. This is also the longest any signal lasts once the wheel turns, so a failed sensor never leaves it on."
-      : "A long press (over 1.5 seconds) switches the signal off after this many seconds, for a longer wait at a junction." },
+      : "A long press (over 1.5 seconds) switches the signal off after this many seconds, for a longer wait before turning." },
   "rear.mode": { label: "Rear lamps", desc: () => "Separate: the rear turn lamps only flash (amber indicators). Combined: they also light as brake lamps (red rear lamps); the signaling side keeps flashing while braking." },
   "run.mode": { label: "Running lights", desc: () => "Which turn lamps glow dimly when they are not flashing, as running or parking lights." },
   "run.source": { label: "Running lights come on", desc: () => "With the ignition, or only when the LIGHTS input is on (for example the headlight switch)." },
@@ -1363,7 +1366,7 @@ const FIELDS = {
   "run.front": { label: "Front running light brightness", desc: () => "How bright the front lamps glow as running lights, limited so a flash stays at least 5 times brighter." },
   "run.rear": { label: "Rear running light brightness", desc: () => "How bright the rear lamps glow as running lights, limited so a flash stays at least 5 times brighter." },
   "bulbout": { label: "Lamp-out warning", desc: () => "When a turn lamp fails, its side flashes twice as fast to tell you, like a factory flasher." },
-  "wss.on": { label: "Wheel speed sensor", desc: () => "With a sensor the signal switches off after a distance driven, so it lasts longer in slow traffic and less at speed. Without one it switches off after a time." },
+  "wss.on": { label: "Wheel speed sensor", desc: () => "With a sensor the signal switches off after a distance traveled, so it lasts longer at low speed and less at high speed. Without one it switches off after a time." },
   "wss.circ": { label: "Tire circumference", kind: "circ", desc: () => `How far the vehicle moves in one turn of the wheel, in ${unitWords("circ")}. Measure it by rolling the wheel one turn.` },
   "wss.ppr": { label: "Pulses per wheel turn", desc: () => "How many pulses the sensor gives for one turn of the wheel: the number of magnets or teeth it sees." },
   "cancel.dist": { label: "Cancel distance", kind: "dist", desc: () => `A normal press switches the signal off after this distance in ${unitWords("dist")}; a long press after twice this.` },
@@ -2923,7 +2926,7 @@ const qsLine = (k) => `<li class="qs" data-qs="${k}">Quick setup: ${QS[k].map(([
   `<b data-step="${st}">${stepLabel(st, k === "moto" ? "moto" : "combined")}:</b> <span data-card="${esc(card)}">${esc(card)}</span>${esc(more || "")}`).join("; ")}; then <b>Review</b> and save.</li>`;
 const TOC = [["h-board", "The board and its connectors"], ["h-power", "Power and lamps"], ["h-inputs", "Switch inputs"], ["h-switch", "Turn switches and the hazard button"],
   ["h-rear", "Separate or combined rear lamps"], ["h-brk", "Brake lamps on BRK"], ["h-wss", "Wheel speed sensor"], ["h-install", "Example installations"],
-  ["h-usb", "Setting up over USB"], ["h-trouble", "Troubleshooting"], ["h-legal", "Safety and the law"]];
+  ["h-usb", "Setting up over USB"], ["h-trouble", "Troubleshooting"], ["h-safety-use", "Safety and intended use"]];
 const HELP_HTML = () => `<div class="hgrid">
 <nav class="toc" aria-label="Contents"><b>Instructions</b><ol>${TOC.map(([id, t], i) => `<li><a href="#${id}"><span>${String(i + 1).padStart(2, "0")}</span>${t}</a></li>`).join("")}</ol></nav>
 <article>
@@ -2959,7 +2962,7 @@ ${fig(art("lamp-states"), "How the lamps look in the drawings on this page and i
 <section id="h-inputs"><h2>Switch inputs: +12 V or ground</h2>
 <div class="two">${fig(wireSvg("input-to-12v"), "<b>Switched to +12 V:</b> the switch connects the input pad (here L) to +12 V from a fused +12 V feed, such as the ignition feed, so it needs no fuse of its own.", "swin")}
 ${fig(wireSvg("input-to-ground"), "<b>Switched to ground:</b> the switch connects the input pad (here L) to the GND pad or to chassis ground when on; a small current flows out of the pad through the switch to ground. Best for the hazard button, because it works with the ignition off.", "swin")}</div>
-<div class="note brake-rule" data-brake-rule>${icon("warn")}<span><b>BRAKE must be switched to +12 V. A brake switch to ground does not work: BRAKE senses only +12 V, and the brake light backup circuit is switched on directly by the +12 V from the brake switch.</b></span></div>
+<div class="note brake-rule" id="h-brake-rule" data-brake-rule>${icon("warn")}<span><b>BRAKE must be switched to +12 V. A brake switch to ground does not work: BRAKE senses only +12 V, and the brake light backup circuit is switched on directly by the +12 V from the brake switch.</b></span></div>
 <p data-input-tip>L, R and LIGHTS work either way, since the controller recognizes both. Switching them to ground is a little simpler to wire from scratch: each switch then needs only a ground, not a fused +12 V feed. HAZ: use ground if the hazards must work with the ignition off.</p>
 <p>"Auto" recognizes both wirings. Set a fixed wiring under Advanced, Switch wiring, only if a switch reads wrongly.</p></section>
 
@@ -3039,16 +3042,16 @@ ${padMap("moto", "The motorcycle example, pad by pad: each wire's number on the 
 <tr><td>Running lights flicker</td><td>Some LED lamps with built-in electronics don't dim: lower the brightness or turn running lights off.</td></tr></table></div>
 <p class="stuck" id="h-stuck">Still stuck? <a data-report href="${ISSUE_URL}" target="_blank" rel="noopener">Report a problem</a> (opens GitHub; you'll need a free account).</p></section>
 
-<section id="h-legal"><h2>Safety and the law</h2>
-<p class="offroad" data-offroad><b>Blynx is intended for off-road use only.</b> It is not certified to any road-lighting standard and is not intended for use on public roads.</p>
-<div class="legal"><ul>
-<li>Flash rate adjustable from 60 to 120 per minute. The running-light glow is limited so a flash stays at least 5 times brighter.</li>
-<li><b>Flashing third brake light</b>: Off-road feature. Off by default. US lighting rules (FMVSS 108) require a steady third brake light on road vehicles (<a href="${FMVSS_URL}" target="_blank" rel="noopener">${FMVSS_LINK[0]}</a>).</li>
-<li><b>Party mode</b>: Off-road feature. Off by default.</li>
-<li>If the controller fails, only the lamps on BRK still light with the brake (backup circuit). With combined rear lamps, fit one: otherwise there is no brake light at all. With separate rear lamps or on a motorcycle, brake lights not on BRK are powered directly by the brake switch, so they do not depend on the controller.</li>
-<li class="fuse-legal">Fuse the +12 V feed near the battery: ${FUSE_RULE} Keep the board dry and away from hot parts.</li></ul></div>
-<div class="legal disclaimer" id="h-disclaimer"><p data-offroad><b>Blynx is intended for off-road use only.</b> It is not certified to any road-lighting standard and is not intended for use on public roads.</p>
-<p><b>No warranty.</b> This controller and this page are provided as is, without warranty of any kind. You are responsible for installing it correctly, for fusing and wiring it as described here, and for making sure your lighting meets the laws where you drive. The maker accepts no liability for damage, injury or loss from its use, misuse, installation or failure, including a failure of any lamp or of the controller.</p></div></section>
+<section id="h-safety-use"><span id="h-legal" class="alias" aria-hidden="true"></span><h2>Safety and intended use</h2>
+<div class="legal safety" id="h-safety"><h3>Safety</h3><ul>
+<li class="brake-backup">If the controller fails, only the lamps on BRK still light with the brake (backup circuit). With combined rear lamps, fit a lamp on BRK: otherwise there is no brake light at all. With separate rear lamps or on a motorcycle, brake lamps not on BRK are powered directly by the brake switch, so they don't depend on the controller.</li>
+<li class="fuse-legal">Fuse the +12 V feed near the battery: ${FUSE_RULE}</li>
+<li class="brake-switch"><a href="#h-brake-rule">BRAKE must be switched to +12 V.</a></li>
+<li class="board-care">Keep the board dry and away from hot parts.</li></ul></div>
+<div class="usebox disclaimer" id="h-disclaimer"><h3>Intended use and warranty</h3>
+<p data-offroad><b>Blynx is intended for off-road use only.</b> It is not certified to any road-lighting standard and is not intended for use on public roads.</p>
+<p class="offroad-features"><b>Off-road features:</b> the flashing third brake light and party mode are off by default. US lighting rules (FMVSS 108) require a steady third brake light on road vehicles (<a href="${FMVSS_URL}" target="_blank" rel="noopener">${FMVSS_LINK[0]}</a>).</p>
+<p class="warranty"><b>No warranty.</b> This controller and this page are provided as is, without warranty of any kind. You are responsible for installing it correctly, for fusing and wiring it as described here, and for complying with any laws that apply to your vehicle and how you use it. The maker accepts no liability for damage, injury or loss from its use, misuse, installation or failure, including a failure of any lamp or of the controller.</p></div></section>
 </article></div>`;
 /* the contents list marks the section being read: a clicked entry at once (until the reader scrolls on); scrolled to the
  * bottom, the last section; otherwise the last section whose heading is above a line a third down the window */
