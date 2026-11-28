@@ -1111,7 +1111,7 @@ ol.steps li::before { content: counter(s); display: grid; place-items: center; w
 const SUPPORTED_MAJORS = [1];
 /* The page's version, shown in the footer. "dev" in the repository; tools/publish.ps1 writes
  * "<yyyy-mm-dd> <short commit hash>" into the copy it publishes (never into this file). */
-const PAGE_VERSION = "2026-11-27 ae43ab2";
+const PAGE_VERSION = "2026-11-27 d2ac8c7";
 const LATEST_URL = "https://lewisfab.github.io/blynx/", SOURCE_URL = "https://github.com/lewisfab/blynx";
 const ISSUE_URL = SOURCE_URL + "/issues/new";
 const CH340 = { usbVendorId: 0x1A86, usbProductId: 0x7523 };
@@ -1351,11 +1351,11 @@ const FIELDS = {
   "flash.rate": { label: "Flash rate", unit: "/min", desc: () => "How many times a minute the turn signals flash, adjustable from 60 to 120 flashes per minute." },
   "cancel.short": { label: "Quick tap: number of flashes", desc: () => "A quick tap (under 0.4 seconds) gives a short signal of this many flashes, with or without a wheel sensor." },
   "cancel.medium": { label: "Normal press: switch off after", unit: "s", desc: () => wssOn()
-      ? "A normal press (0.4 to 1.5 seconds) switches the signal off after the cancel distance. Until the first wheel pulse arrives it switches off after this many seconds instead."
-      : "A normal press (0.4 to 1.5 seconds) switches the signal off after this many seconds." },
+      ? "A normal press (0.4 to 1.5 seconds) switches the signal off after the cancel distance. Until the first wheel pulse arrives it switches off after this many seconds instead. Paused while braking; at least 3 s remain after the brake is released."
+      : "A normal press (0.4 to 1.5 seconds) switches the signal off after this many seconds. Paused while braking; at least 3 s remain after the brake is released." },
   "cancel.long": { label: "Long press: switch off after", unit: "s", desc: () => wssOn()
-      ? "A long press (over 1.5 seconds) switches off after twice the cancel distance. This is also the longest any signal lasts once the wheel turns, so a failed sensor never leaves it on."
-      : "A long press (over 1.5 seconds) switches the signal off after this many seconds, for a longer wait before turning." },
+      ? "A long press (over 1.5 seconds) switches off after twice the cancel distance. This is also the longest any signal lasts once the wheel turns, so a failed sensor never leaves it on. Paused while braking; at least 3 s remain after the brake is released."
+      : "A long press (over 1.5 seconds) switches the signal off after this many seconds, for a longer wait before turning. Paused while braking; at least 3 s remain after the brake is released." },
   "rear.mode": { label: "Rear lamps", desc: () => "Separate: the rear turn lamps only flash (amber indicators). Combined: they also light as brake lamps (red rear lamps); the signaling side keeps flashing while braking." },
   "run.mode": { label: "Running lights", desc: () => "Which turn lamps glow dimly when they are not flashing, as running or parking lights." },
   "run.source": { label: "Running lights come on", desc: () => "With the ignition, or only when the LIGHTS input is on (for example the headlight switch)." },
@@ -1369,8 +1369,8 @@ const FIELDS = {
   "wss.on": { label: "Wheel speed sensor", desc: () => "With a sensor the signal switches off after a distance traveled, so it lasts longer at low speed and less at high speed. Without one it switches off after a time." },
   "wss.circ": { label: "Tire circumference", kind: "circ", desc: () => `How far the vehicle moves in one turn of the wheel, in ${unitWords("circ")}. Measure it by rolling the wheel one turn.` },
   "wss.ppr": { label: "Pulses per wheel turn", desc: () => "How many pulses the sensor gives for one turn of the wheel: the number of magnets or teeth it sees." },
-  "cancel.dist": { label: "Cancel distance", kind: "dist", desc: () => `A normal press switches the signal off after this distance in ${unitWords("dist")}; a long press after twice this.` },
-  "cancel.latch_wss": { label: "Wheel speed cancels a latching signal", desc: () => "For a latching switch: after the cancel distance the switch stays on but the signal stops. It signals again only after the switch has been moved back to the center (or to the other side). With no wheel pulses it never stops by itself, and the hazards are never stopped." },
+  "cancel.dist": { label: "Cancel distance", kind: "dist", desc: () => `A normal press switches the signal off after this distance in ${unitWords("dist")}; a long press after twice this. Backup limit: once the wheel turns, no signal lasts longer than the long-press time. Paused while braking; at least 3 s remain after the brake is released.` },
+  "cancel.latch_wss": { label: "Wheel speed cancels a latching signal", desc: () => "For a latching switch: after the cancel distance the switch stays on but the signal stops. It signals again only after the switch has been moved back to the center (or to the other side). With no wheel pulses it never stops by itself, and the hazards are never stopped. Its time limit (the long-press time, counted from the first wheel pulse) is paused while braking; at least 3 s remain after the brake is released." },
   "scale.on": { label: "Distance grows with speed", desc: () => "Use a short cancel distance in town and a longer one at speed, between the two speeds below." },
   "scale.dmin": { label: "Distance at low speed", kind: "dist", desc: () => `The cancel distance at or below the low speed, in ${unitWords("dist")}.` },
   "scale.dmax": { label: "Distance at high speed", kind: "dist", desc: () => `The cancel distance at or above the high speed, in ${unitWords("dist")}.` },
@@ -2413,7 +2413,7 @@ function renderWizard() {
     const cur = v("run.mode") === "off" ? "off" : v("run.source");
     // still pictures (no flashing), so on and off are told apart by the glow alone; a caption under each
     const off = ["off", "Off", m ? "The indicators stay dark when not flashing." : "The turn lamps stay dark when not flashing.", frontPic({}, "Lamps off"), "Off until signaling", m];
-    const ign = ["ign", m ? "On whenever the ignition is on" : "On with the ignition", "They glow whenever the ignition is on.", frontPic({ glow: true }, "Indicators glowing dimly"), "Dim glow while driving", m];
+    const ign = ["ign", m ? "On whenever the ignition is on" : "On with the ignition", "They glow whenever the ignition is on.", frontPic({ glow: true }, "Indicators glowing dimly"), "Dim glow with the ignition on", m];
     const opts = m ? [off, ign] : [["lights", "On with the LIGHTS input", "They glow when the LIGHTS input is on, for example with the headlights.", frontPic({ glow: true, head: true }, "Headlights on, indicators glowing dimly"), "Dim glow while the lights are on"], ign, off];
     body.appendChild(choiceButtons(cur, opts, async (val) => {
       if (val === "off") { await wizSet("run.mode", "off"); return; }
@@ -2973,7 +2973,9 @@ ${fig(art("moto-push-buttons"), "<b>Momentary switch on a motorcycle</b> (the ri
 ${fig(art("hazard-dash"), "<b>Hazard button</b> (optional, on HAZ): the button with the red triangle, usually in the middle of the dash. Wire it to switch to ground so the hazards also work with the ignition off.")}
 ${fig(wireSvg("hazard-on-haz"), "<b>Hazard button on HAZ</b>: the button connects the HAZ pad to ground; then the hazards work with the ignition off too.")}
 ${fig(art("hazard-to-12v"), "<b>Hazard button to +12 V</b>: also recognized (Auto). " + HAZ_NOTE, "haz-12v")}
-${fig(art("no-hazard-button"), "<b>No hazard button</b>: press left and right together to start the hazards.")}</div></section>
+${fig(art("no-hazard-button"), "<b>No hazard button</b>: press left and right together to start the hazards.")}</div>
+<h3 id="h-cancel">How signals cancel</h3>
+<p class="brake-pause">Braking pauses the self-cancel. Stop with a signal on and it keeps flashing however long you wait; when you release the brake it carries on for at least 3 more seconds (or until the cancel distance is covered, with a wheel sensor). A short tap always gives its set number of flashes.</p></section>
 
 <section id="h-rear"><h2>Separate or combined rear lamps</h2>
 <div class="two">${fig(carRear({ mode: "separate", turn: "flash", chmsl: "fit" }, "Car from behind, separate amber indicators: the left one flashing"), "<b>Separate</b>: amber rear indicators on RL/RR that only flash; the red tail and brake lamps are separate (the brake lights on BRK, or powered directly by the brake switch).")}
